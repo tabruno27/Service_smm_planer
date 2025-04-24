@@ -3,6 +3,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.oauth2 import service_account
 from oauth2client.service_account import ServiceAccountCredentials
+from scr.utils import format_text
 
 
 def authorize_google_sheets():
@@ -34,4 +35,5 @@ def fetch_text_from_google_doc(doc_id):
                 if text_run:
                     full_text += text_run.get('content')
 
-    return full_text
+    formatted_text = format_text(full_text)
+    return formatted_text
