@@ -77,6 +77,8 @@ docs/_build/
 # PyBuilder
 target/
 
+# IDE
+.idea/
 
 ### Django ###
 *.log
@@ -89,5 +91,7 @@ local_settings.py
 db.sqlite3
 media/
 env/
+.venv/
+venv/
 token.env
 t-osprey-457618-g6-3f1c8cc61184.json

@@ -2,8 +2,14 @@ import time
 from telegram import Bot
 
 
-def post_to_telegram(telegram_token, channel_id, message):
-    bot = Bot(token=telegram_token)
+def post_to_telegram(token, channel_id, message, image_url=None):
+    bot = Bot(token=token)
+
+    if image_url:
+        bot.send_photo(chat_id=channel_id, photo=image_url, caption=message, timeout=30)
+    else:
+        bot.send_message(chat_id=channel_id, text=message, timeout=30)
+
     max_attempts = 3
     attempt = 0
 

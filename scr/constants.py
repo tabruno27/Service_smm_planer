@@ -1,0 +1,6 @@
+STATUS_COL     = "Статус публикации"
+DATE_COL       = "Дата"
+DOC_COL        = "Ссылка на документ"
+SOCIAL_COL     = "Соцсеть"
+IMAGE_COL      = "Фото URL"
+EXTRA_PAGES_COL = "Дополнительная страница"
