@@ -81,8 +81,8 @@ def scan_sheet(
         posted = False
         try:
             if net == "вконтакте":
-                for page in target_vk_pages:
-                    post_to_vk(vk_token, page, message, image_url)
+                for grp in targets.get("вконтакте", []):
+                    post_to_vk(grp["token"], grp["id"], message, image_url)
                     posted = True
             elif net == "телеграм":
                 for tg_chan in targets.get("телеграм", target_tg):

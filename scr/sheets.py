@@ -44,21 +44,59 @@ def load_targets(book_name: str = "SMM-planer",
     client = authorize_google_sheets()
     ws = client.open(book_name).worksheet(system_sheet)
 
-    header = ws.row_values(1)                    # ['телеграм', 'одноклассники', 'вконтакте']
-    columns = ws.get_all_values()[1:]            # всё после первой строки
+    header = [h.strip().lower() for h in ws.row_values(1)]
+    data   = ws.get_all_values()[1:]                  # строки 2+
 
-    targets: dict[str, list] = {h.strip().lower(): [] for h in header}
+    # базовая структура
+    targets: dict[str, list] = {
+        "телеграм": [],
+        "одноклассники": [],
+        "вконтакте": []
+    }
 
-    for row in columns:
-        for col_idx, cell in enumerate(row, start=0):
-            name = header[col_idx].strip().lower()
-            inner_target_link = cell.strip()
-            if inner_target_link:
-                if name == "вконтакте":
-                    try:
-                        inner_target_link = int(inner_target_link)
-                    except ValueError:
-                        continue
-                targets[name].append(inner_target_link)
+    # индексы нужных колонок
+    try:
+        col_tg   = header.index("телеграм")
+    except ValueError:
+        col_tg = None
+
+    try:
+        col_ok   = header.index("одноклассники")
+    except ValueError:
+        col_ok = None
+
+    try:
+        col_vk   = header.index("вконтакте")
+        col_vk_t = header.index("vk_token")
+    except ValueError:
+        col_vk = col_vk_t = None
+
+    for row in data:
+        # -------- телеграм --------
+        if col_tg is not None and len(row) > col_tg:
+            chan = row[col_tg].strip()
+            if chan:
+                targets["телеграм"].append(chan)
+
+        # -------- одноклассники --------
+        if col_ok is not None and len(row) > col_ok:
+            ok_link = row[col_ok].strip()
+            if ok_link:
+                targets["одноклассники"].append(ok_link)
+
+        # -------- вконтакте + token --------
+        if col_vk is not None and col_vk_t is not None \
+           and len(row) > max(col_vk, col_vk_t):
+
+            vk_id_raw   = row[col_vk].strip()
+            vk_token    = row[col_vk_t].strip()
+
+            if vk_id_raw and vk_token:
+                try:
+                    vk_id = int(vk_id_raw)
+                except ValueError:
+                    # если ID не число — пропускаем строку
+                    continue
+                targets["вконтакте"].append({"id": vk_id, "token": vk_token})
 
     return targets
