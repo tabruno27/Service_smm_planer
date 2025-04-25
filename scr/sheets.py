@@ -3,7 +3,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.oauth2 import service_account
 from oauth2client.service_account import ServiceAccountCredentials
-from scr.utils import format_text
+from scr.utils.ficha import format_text
 
 
 def authorize_google_sheets():
