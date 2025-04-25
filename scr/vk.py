@@ -8,7 +8,7 @@ def post_to_vk(vk_token, group_id: int, message: str, image_url: str | None = No
     attachments = image_url or ""
 
     try:
-        vk.wall.post(owner_id=-group_id, message=message, attachments=attachments)
+        vk.wall.post(owner_id=-group_id, message=message, attachments=attachments, from_group=1)
         print(f"Message posted to VK group {group_id}")
     except vk_api.exceptions.ApiError as e:
         print(f"An error occurred while posting to VK: {e}")
