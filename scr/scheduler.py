@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import List
 
-from scr.sheets import authorize_google_sheets, fetch_text_from_google_doc
+from scr.sheets import authorize_google_sheets, fetch_text_from_google_doc, load_targets
 from scr.vk import post_to_vk
 from scr.tg import post_to_telegram
 from scr.constants import (STATUS_COL, DATE_COL, TIME_COL, DOC_COL,
@@ -21,6 +21,7 @@ def scan_sheet(
 ) -> None:
     """Читает Google-Sheet и публикует записи, время в таблице хранится в UTC."""
     ws = authorize_google_sheets().open(sheet_name).sheet1
+    targets = load_targets()
     header = ws.row_values(1)
     status_col = header.index(STATUS_COL) + 1
     records = ws.get_all_records()
@@ -73,7 +74,8 @@ def scan_sheet(
         # ---------- КУДА ПУБЛИКУЕМ ----------
         net = rec[SOCIAL_COL].strip().lower()     # теперь всегда одна соцсеть
         extra_vk = [int(p.strip()) for p in rec.get(EXTRA_PAGES_COL, "").split(",") if p.strip()]
-        target_vk_pages = [vk_group_id] + extra_vk
+        target_vk_pages = targets.get("вконтакте", []) + extra_vk
+        target_tg = targets.get("телеграм", [telegram_channel_id])
 
         # ---------- ОТПРАВКА ----------
         posted = False
@@ -83,10 +85,12 @@ def scan_sheet(
                     post_to_vk(vk_token, page, message, image_url)
                     posted = True
             elif net == "телеграм":
-                post_to_telegram(telegram_token, telegram_channel_id, message, image_url)
-                posted = True
+                for tg_chan in targets.get("телеграм", target_tg):
+                    post_to_telegram(telegram_token, tg_chan, message, image_url)
+                    posted = True
             elif net == "одноклассники":
-                print("[stub] OK posting не реализован")
+                for ok_page in targets.get("одноклассники", []):
+                    print(f"[stub] OK posting to {ok_page} не реализован")
         except Exception as e:
             print(f"[row {idx}] Ошибка постинга: {e}")
 

@@ -37,3 +37,28 @@ def fetch_text_from_google_doc(doc_id):
 
     formatted_text = format_text(full_text)
     return formatted_text
+
+
+def load_targets(book_name: str = "SMM-planer",
+                 system_sheet: str = "links") -> dict[str, list]:
+    client = authorize_google_sheets()
+    ws = client.open(book_name).worksheet(system_sheet)
+
+    header = ws.row_values(1)                    # ['телеграм', 'одноклассники', 'вконтакте']
+    columns = ws.get_all_values()[1:]            # всё после первой строки
+
+    targets: dict[str, list] = {h.strip().lower(): [] for h in header}
+
+    for row in columns:
+        for col_idx, cell in enumerate(row, start=0):
+            name = header[col_idx].strip().lower()
+            inner_target_link = cell.strip()
+            if inner_target_link:
+                if name == "вконтакте":
+                    try:
+                        inner_target_link = int(inner_target_link)
+                    except ValueError:
+                        continue
+                targets[name].append(inner_target_link)
+
+    return targets
