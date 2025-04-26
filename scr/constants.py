@@ -4,7 +4,7 @@ TIME_COL        = "Время"
 DOC_COL         = "Ссылка на документ"
 SOCIAL_COL      = "Соцсеть"
 IMAGE_COL       = "Фото URL"
-EXTRA_PAGES_COL = "Дополнительная страница"
+STATUS_COL_EXTRA = "Статус публикации доп. группы"
 
 from pytz import timezone
 LOCAL_TZ = timezone("Europe/Moscow")

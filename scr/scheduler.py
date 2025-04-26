@@ -5,7 +5,7 @@ from scr.sheets import authorize_google_sheets, fetch_text_from_google_doc, load
 from scr.vk import post_to_vk
 from scr.tg import post_to_telegram
 from scr.constants import (STATUS_COL, DATE_COL, TIME_COL, DOC_COL,
-                           SOCIAL_COL, IMAGE_COL, EXTRA_PAGES_COL)
+                           SOCIAL_COL, IMAGE_COL, STATUS_COL_EXTRA)
 from scr.utils.google import extract_doc_id
 from scr.constants import LOCAL_TZ
 from scr.constants import OK_MARK, FAIL_MARK
@@ -24,6 +24,10 @@ def scan_sheet(
     targets = load_targets()
     header = ws.row_values(1)
     status_col = header.index(STATUS_COL) + 1
+    try:
+        status_col_extra = header.index(STATUS_COL_EXTRA) + 1
+    except ValueError:
+        status_col_extra = None
     records = ws.get_all_records()
     now_utc = datetime.now(timezone.utc)
 
@@ -73,17 +77,26 @@ def scan_sheet(
 
         # ---------- КУДА ПУБЛИКУЕМ ----------
         net = rec[SOCIAL_COL].strip().lower()     # теперь всегда одна соцсеть
-        extra_vk = [int(p.strip()) for p in rec.get(EXTRA_PAGES_COL, "").split(",") if p.strip()]
-        target_vk_pages = targets.get("вконтакте", []) + extra_vk
+        vk_targets = targets.get("вконтакте", [])
+        has_extra_groups = len(vk_targets) >= 2
         target_tg = targets.get("телеграм", [telegram_channel_id])
 
         # ---------- ОТПРАВКА ----------
         posted = False
+        posted_extra = False
+        need_extra_status = False  # Флаг, нужен ли статус для доп. группы
         try:
             if net == "вконтакте":
-                for grp in targets.get("вконтакте", []):
-                    post_to_vk(grp["token"], grp["id"], message, image_url)
+                if len(vk_targets) > 0:
+                    main_group = vk_targets[0]
+                    post_to_vk(main_group["token"], main_group["id"], message, image_url)
                     posted = True
+                
+                if has_extra_groups:
+                    for extra_group in vk_targets[1:]:
+                        post_to_vk(extra_group["token"], extra_group["id"], message, image_url)
+                        posted_extra = True
+                    need_extra_status = True
             elif net == "телеграм":
                 for tg_chan in targets.get("телеграм", target_tg):
                     post_to_telegram(telegram_token, tg_chan, message, image_url)
@@ -95,4 +108,9 @@ def scan_sheet(
             print(f"[row {idx}] Ошибка постинга: {e}")
 
         ws.update_cell(idx, status_col, OK_MARK if posted else FAIL_MARK)
+        if status_col_extra and need_extra_status:
+            ws.update_cell(idx, status_col_extra, OK_MARK if posted_extra else FAIL_MARK)
+        elif status_col_extra:
+            # Очищаем статус для не-ВК соцсетей
+            ws.update_cell(idx, status_col_extra, "")
         print(f"[row {idx}] {'Опубликовано' if posted else 'Не отправлено'}!")
