@@ -12,6 +12,8 @@ def load_env():
         "telegram_token": env.str("TELEGRAM_TOKEN"),
         "vk_group_id": env.int("VK_GROUP_ID"),
         "telegram_channel_id": env.str("TELEGRAM_CHANNEL_ID"),
+        "ok_app_key": env.str("OK_APPLICATION_KEY"),
+        "ok_access_token": env.str("OK_ACCESS_TOKEN")
     }
 
 def main() -> None:
@@ -31,6 +33,8 @@ def main() -> None:
             cfg["telegram_token"],
             cfg["vk_group_id"],
             cfg["telegram_channel_id"],
+            cfg["ok_app_key"],
+            cfg["ok_access_token"]
         ],
         max_instances=1,   # не пускать второй экземпляр, если первый ещё работает
         misfire_grace_time=30,  # если пропустили — выполнить в течение 30 с

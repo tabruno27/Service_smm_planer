@@ -4,6 +4,7 @@ from typing import List
 from scr.sheets import authorize_google_sheets, fetch_text_from_google_doc, load_targets
 from scr.vk import post_to_vk
 from scr.tg import post_to_telegram
+from scr.ok import post_to_ok
 from scr.constants import (STATUS_COL, DATE_COL, TIME_COL, DOC_COL,
                            SOCIAL_COL, IMAGE_COL, STATUS_COL_EXTRA)
 from scr.utils.google import extract_doc_id
@@ -17,6 +18,8 @@ def scan_sheet(
     telegram_token: str,
     vk_group_id: int,
     telegram_channel_id: str,
+    ok_app_key: str,
+    ok_access_token: str,
     sheet_name: str = "SMM-planer",
 ) -> None:
     """Читает Google-Sheet и публикует записи, время в таблице хранится в UTC."""
@@ -80,6 +83,7 @@ def scan_sheet(
         vk_targets = targets.get("вконтакте", [])
         has_extra_groups = len(vk_targets) >= 2
         target_tg = targets.get("телеграм", [telegram_channel_id])
+        ok_groups = targets.get("одноклассники", [])
 
         # ---------- ОТПРАВКА ----------
         posted = False
@@ -102,8 +106,15 @@ def scan_sheet(
                     post_to_telegram(telegram_token, tg_chan, message, image_url)
                     posted = True
             elif net == "одноклассники":
-                for ok_page in targets.get("одноклассники", []):
-                    print(f"[stub] OK posting to {ok_page} не реализован")
+                for ok_group_id in ok_groups:
+                    post_to_ok(
+                        app_key=ok_app_key,
+                        access_token=ok_access_token,
+                        group_id=ok_group_id,
+                        message=message,
+                        image_url=image_url
+                    )
+                    posted = True
         except Exception as e:
             print(f"[row {idx}] Ошибка постинга: {e}")
 
@@ -113,4 +124,4 @@ def scan_sheet(
         elif status_col_extra:
             # Очищаем статус для не-ВК соцсетей
             ws.update_cell(idx, status_col_extra, "")
-        print(f"[row {idx}] {'Опубликовано' if posted else 'Не отправлено'}!")
+        print(f"[row {idx}] {'Опубликовано' if posted else 'Не отправлено'} в {net}!")

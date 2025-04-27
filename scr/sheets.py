@@ -80,9 +80,10 @@ def load_targets(book_name: str = "SMM-planer",
 
         # -------- одноклассники --------
         if col_ok is not None and len(row) > col_ok:
-            ok_link = row[col_ok].strip()
-            if ok_link:
-                targets["одноклассники"].append(ok_link)
+            ok_id  = row[col_ok].strip()
+            if ok_id :
+                ok_id = ok_id.split('.')[0].strip()
+                targets["одноклассники"].append(ok_id)
 
         # -------- вконтакте + token --------
         if col_vk is not None and col_vk_t is not None \
